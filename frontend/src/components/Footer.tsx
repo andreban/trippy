@@ -1,4 +1,4 @@
-import { Box, Container, Typography } from "@mui/material";
+import { Box, Container, Link, Typography } from "@mui/material";
 
 export default function Footer() {
     return <Box
@@ -11,7 +11,7 @@ export default function Footer() {
   >
     <Container maxWidth="sm">
       <Typography variant="body1" sx={{ textAlign: 'center'}}>
-        Made with ✨ by Chrome DevRel / @andreban.
+        Made with ✨ by Chrome DevRel / <Link href="https://twitter.com/andreban/">@andreban</Link>.
       </Typography>
     </Container>
   </Box>
