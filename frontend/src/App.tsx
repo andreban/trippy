@@ -27,7 +27,7 @@ function App() {
 
   // Creates the initial session.
   useEffect(() => {
-      fetch('http://localhost:8080/api/prompt')
+      fetch('/api/prompt')
           .then(response => response.json())
           .then(data => {
               setSessionId(data.sessionId);
@@ -45,7 +45,6 @@ function App() {
       if (!userMessage || !sessionId) {
           return;
       }
-      // fetch(`http://localhost:8080/api/prompt?prompt=${userMessage}&session_id=${sessionId}`)
       fetch(`/api/prompt?prompt=${userMessage}&session_id=${sessionId}`)
           .then(response => response.json())
           .then(data => {

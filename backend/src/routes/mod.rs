@@ -40,22 +40,22 @@ pub async fn prompt(
     State(appstate): State<AppState>,
     Query(params): Query<PromptParams>,
 ) -> impl IntoResponse {
-    tracing::info!("prompt params: {:#?}", params);
+    tracing::info!("prompt params: {:?}", params);
+    let messages_cache = get_messages_cache();
 
     let session_id = params
         .session_id
         .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
 
-    let mut conversation = get_messages_cache()
-        .get(&session_id)
-        .await
-        .unwrap_or_else(|| {
-            vec![Message {
-                role: "user".to_string(),
-                text: prompt::BASE_PROMPT.to_string(),
-            }]
-        });
+    let mut conversation = messages_cache.get(&session_id).await.unwrap_or_else(|| {
+        tracing::info!("creating new conversation for session_id: {}", session_id);
+        vec![Message {
+            role: "user".to_string(),
+            text: prompt::BASE_PROMPT.to_string(),
+        }]
+    });
 
+    tracing::info!("Existing conversation: {:#?}", conversation);
     // Append the user's prompt to the conversation.
     if let Some(prompt) = &params.prompt {
         conversation.push(Message {
@@ -81,7 +81,7 @@ pub async fn prompt(
 
     tracing::info!("conversation: {:#?}", conversation);
     // Save the updated conversation to the session.
-    get_messages_cache()
+    messages_cache
         .insert(session_id.clone(), conversation)
         .await;
 
