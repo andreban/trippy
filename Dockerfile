@@ -16,7 +16,6 @@ RUN apt install openssl ca-certificates -y
 WORKDIR /app
 COPY --from=rustbuilder /usr/local/cargo/bin/backend /usr/local/bin/backend
 COPY --from=nodebuilder /app/dist /app/static
-COPY ./gcp-credentials.json /app/gcp-credentials.json
 EXPOSE 8080
 CMD ["backend"]
 
