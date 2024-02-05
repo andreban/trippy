@@ -2,11 +2,29 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use time::OffsetDateTime;
 
-use crate::vertexai::{TokenProvider, VertexClient};
+use crate::vertexai::{self, TokenProvider, VertexClient};
+
+pub type PromptResult = Result<PromptResponse, PromptError>;
+pub enum PromptError {
+    VertexError(String),
+    SerdeError(String),
+}
+
+impl From<vertexai::Error> for PromptError {
+    fn from(e: vertexai::Error) -> Self {
+        PromptError::VertexError(e.to_string())
+    }
+}
+
+impl From<serde_json::Error> for PromptError {
+    fn from(e: serde_json::Error) -> Self {
+        PromptError::SerdeError(e.to_string())
+    }
+}
 
 #[derive(Default, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct PromptResult {
+pub struct PromptResponse {
     pub destination: Option<String>,
     pub check_in: Option<String>,
     pub check_out: Option<String>,
@@ -22,11 +40,8 @@ pub async fn prompt_conversation<T: TokenProvider + Clone>(
     conversation: &[(&str, &str)],
 ) -> PromptResult {
     tracing::info!("prompt_conversation: {:#?}", conversation);
-    let model_response = vertex_client
-        .prompt_conversation(conversation)
-        .await
-        .unwrap();
-    serde_json::from_str::<PromptResult>(&model_response).unwrap()
+    let model_response = vertex_client.prompt_conversation(conversation).await?;
+    Ok(serde_json::from_str::<PromptResponse>(&model_response)?)
 }
 
 pub fn create_initial_prompt() -> String {

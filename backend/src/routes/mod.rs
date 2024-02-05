@@ -71,7 +71,20 @@ pub async fn prompt(
         .collect::<Vec<(&str, &str)>>();
 
     // Get the response from the model.
-    let response = prompt_conversation(&appstate.vertex_client, &model_conversation).await;
+    let response = match prompt_conversation(&appstate.vertex_client, &model_conversation).await {
+        Ok(response) => response,
+        Err(e) => {
+            let message = match e {
+                prompt::PromptError::VertexError(e) => {
+                    format!("Error getting response from prompt: {}", e)
+                }
+                prompt::PromptError::SerdeError(e) => {
+                    format!("Error deserializing response from prompt: {}", e)
+                }
+            };
+            return (axum::http::StatusCode::INTERNAL_SERVER_ERROR, message);
+        }
+    };
 
     // Append the model's response to the conversation.
     conversation.push(Message {
@@ -90,5 +103,8 @@ pub async fn prompt(
         "sessionId": session_id,
         "response": response,
     });
-    serde_json::to_string(&json).unwrap()
+    (
+        axum::http::StatusCode::OK,
+        serde_json::to_string(&json).unwrap(),
+    )
 }
