@@ -1,5 +1,5 @@
 // import { useState } from 'react'
-import { Box, Button, Collapse, Container, CssBaseline, Fade, Paper, TextField, Typography } from '@mui/material'
+import { Box, Button, Collapse, Container, CssBaseline, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Fade, Paper, TextField, Typography } from '@mui/material'
 import './App.css'
 import Footer from './components/Footer'
 import Header from './components/Header'
@@ -37,6 +37,8 @@ function App() {
   const [messages, setMessages] = useState<Message[]>(MESSAGES);
   const [input, setInput] = useState<string>('');
   const [trippyCollapsed, setTrippyCollapsed] = useState<boolean>(false);
+  const [searchDialog, setSearchDialog] = useState<boolean>(false);
+  const [goButtonEnabled, setGoButtonEnabled] = useState<boolean>(false);
 
   // Creates the initial session.
   useEffect(() => {
@@ -137,17 +139,51 @@ function App() {
       behavior: 'smooth'
     });
   }, [messages]);
+
+  useEffect(() => {
+    setGoButtonEnabled(
+      tripDetails !== undefined
+      && tripDetails.destination !== undefined && tripDetails.destination !== ''
+      && tripDetails.checkIn !== undefined
+      && tripDetails.checkOut !== undefined
+      && tripDetails.numGuests !== undefined
+      && tripDetails.numBedrooms !== undefined);
+  }, [tripDetails]);
   
+  function handleClose() {
+    setSearchDialog(false);
+  }
   return (
     <>
       <ThemeProvider theme={defaultTheme}>
       <CssBaseline />
+      <Dialog open={searchDialog} onClose={handleClose}>
+        <DialogTitle id="alert-dialog-title">
+          {"This is just a demo app. No real search will be performed."}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            You've selected a trip to <strong>{tripDetails.destination!} </strong> 
+            from <strong>{dayjs(tripDetails.checkIn!).format('YYYY-MM-DD')} </strong>
+            to <strong>{dayjs(tripDetails.checkOut!).format('YYYY-MM-DD')} </strong>
+            with <strong>{tripDetails.numGuests!} guests </strong>
+            and <strong>{tripDetails.numChildren!} children </strong>
+            in <strong>{tripDetails.numBedrooms!} rooms</strong>.
+            This is just a demo app. No real search will be performed.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} autoFocus>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Header />
       <Container component="main" sx={{ display: 'flex', flexDirection: 'column', gap: 2}}>
       <Paper variant="outlined" sx={{ my: { xs: 3, md: 2 }, p: { xs: 2, md: 3 }, gap: 2, width: '100%', display: 'flex', flexDirection: 'column'}}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Typography variant="h5">Hotel Search</Typography>
-          <form action='' style={{ display: 'flex', flexDirection: 'column'}}>
+          {/* <form action='' style={{ display: 'flex', flexDirection: 'column'}}> */}
           <TextField
             name="destination"
             required
@@ -206,8 +242,8 @@ function App() {
               sx={{ minWidth: 60}}
             />
           </Box>
-          <Button variant="contained" sx={{alignSelf: 'end'}} type='submit'><span ref={buttonRef}>Go</span></Button>
-          </form>
+          <Button variant="contained" disabled={!goButtonEnabled} sx={{alignSelf: 'end'}} onClick={() => {setSearchDialog(true)}}><span ref={buttonRef}>Go</span></Button>
+          {/* </form> */}
           </LocalizationProvider>
 
           <Button variant="outlined" onClick={() => {

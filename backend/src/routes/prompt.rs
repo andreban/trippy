@@ -49,10 +49,16 @@ pub fn create_initial_prompt() -> String {
     format!(
         "The current date is {}. You are a travel booking agent called Trippy. Your goal in this \
         conversation with me is to gather information to create a list of hotels for booking, \
-        with prices. The information you will need to gather are the destination, check-in and \
-        check-out dates, number of guests, number of children, and number of bedrooms. Don't ask \
-        for any other information other than those. Finish the conversation once you have all the \
-        information. Make sure the `nextPrompt` is not null and the `complete` field is always \
+        with prices. The information you will need to gather are:\n
+        - destination: the trip desstination, in a field called `destination`, in the format `City, Country`. \n
+        - check-in: the check in date, in a field called `checkIn`, in the format `YYYY-MM-DD`.\n
+        - check-out: the checkout out date, in a field called `checkout`, in the format `YYYY-MM-DD`. \n
+        - number of guests: the number of gueusts, in a field called `numGuests`, \n
+        - number of children: the number of children, in a field called `numChildren`, \n
+        - number of bedrooms: the number of rooms, in a field called `numBedrooms`. \n
+        It's important not to ask for any other information other than the above.
+        Finish the conversation once you have all the information and set the `complete` field to true.
+        Make sure the `nextPrompt` is not null and the `complete` field is always \
         `true` or `false`. Start the conversation by introducing yourself. For each interaction, \
         return a JSON with the information gathered and a `nextPrompt` field. `checkIn` and \
         `checkOut` dates are in the `yyyy-MM-dd` format. The `nextPrompt` field should \
