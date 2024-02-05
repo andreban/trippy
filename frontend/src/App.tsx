@@ -13,7 +13,7 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs';
 
-const PROMPT_URL = 'http://localhost:8080/api/prompt';
+const PROMPT_URL = import.meta.env.VITE_PROMPT_BASE_URL;
 
 const defaultTheme = createTheme();
 let NEXT_MESSAGE_ID: number = 0;
@@ -57,7 +57,6 @@ function App() {
                 newTripDetails.numGuests = data.response.numGuests ? data.response.numGuests : newTripDetails.numGuests;
                 newTripDetails.numChildren = data.response.numChildren ? data.response.numChildren : newTripDetails.numChildren;
                 newTripDetails.numBedrooms = data.response.numBedrooms ? data.response.numBedrooms : newTripDetails.numBedrooms;                
-                console.log(newTripDetails);              
                 return newTripDetails;
               });
               setMessages(m => [...m, robotMessage]);
@@ -100,6 +99,7 @@ function App() {
                   alignToTop: false,
                   behavior: 'smooth'
                 });
+                setTrippyCollapsed(false);
               } else {
                 setMessages(m => [...m, robotMessage]);
               }
@@ -147,7 +147,7 @@ function App() {
       <Paper variant="outlined" sx={{ my: { xs: 3, md: 2 }, p: { xs: 2, md: 3 }, gap: 2, width: '100%', display: 'flex', flexDirection: 'column'}}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Typography variant="h5">Hotel Search</Typography>
-          <form action=''>
+          <form action='' style={{ display: 'flex', flexDirection: 'column'}}>
           <TextField
             name="destination"
             required
