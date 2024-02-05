@@ -1,5 +1,6 @@
 import { Card, Typography } from "@mui/material";
 import { Message } from "../lib/Message";
+import Markdown from "react-markdown";
 
 export default function ConversationCard({message} : {message: Message}) {
     const alignment = message.sender == 'user' ? 'end' : 'start';
@@ -9,7 +10,7 @@ export default function ConversationCard({message} : {message: Message}) {
     return (
         <Card sx={{ m: 2, p: 2, width: "80%", alignSelf: alignment, textAlign: alignment, backgroundColor: backgroundColor, flexShrink:0}}>
             <Typography variant="h6">{senderName}</Typography>
-            <Typography variant="body2">{message.content}</Typography>
+            <Markdown>{message.content}</Markdown>
         </Card>
     )
 }

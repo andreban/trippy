@@ -51,7 +51,7 @@ pub async fn prompt(
         tracing::info!("creating new conversation for session_id: {}", session_id);
         vec![Message {
             role: "user".to_string(),
-            text: prompt::BASE_PROMPT.to_string(),
+            text: prompt::create_initial_prompt(),
         }]
     });
 

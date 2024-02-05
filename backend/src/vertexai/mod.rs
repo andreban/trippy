@@ -123,6 +123,7 @@ impl<T: TokenProvider + Clone> VertexClient<T> {
 
     /// Sends a text prompt to the Vertex API using the Gemini Pro model and extracts the text
     /// from the response.
+    #[allow(dead_code)]
     pub async fn prompt_text(
         &self,
         prompt: &str,
