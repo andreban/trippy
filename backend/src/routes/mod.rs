@@ -2,7 +2,10 @@ mod prompt;
 
 use std::sync::OnceLock;
 
-use crate::{routes::prompt::PromptResponse, AppState};
+use crate::{
+    routes::prompt::{create_initial_prompt, recover_conversation, PromptResponse},
+    AppState,
+};
 use axum::{
     extract::{Query, State},
     response::IntoResponse,
@@ -45,24 +48,30 @@ pub async fn prompt(
         Dialogue::new()
     });
 
-    let prompt = params
-        .prompt
-        .clone()
-        .unwrap_or_else(prompt::create_initial_prompt);
+    let mut prompt = params.prompt.clone().unwrap_or_else(create_initial_prompt);
 
-    let response = match conversation.do_turn(&appstate.vertex_client, &prompt).await {
-        Ok(response) => response,
-        Err(_) => {
-            return (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                "API Error".to_string(),
-            );
+    let response;
+    loop {
+        println!(">>>> prompt: {}", prompt);
+        let result = match conversation.do_turn(&appstate.vertex_client, &prompt).await {
+            Ok(response) => response,
+            Err(_) => {
+                return (
+                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                    "API Error".to_string(),
+                );
+            }
+        };
+
+        println!("<<<< result: {}", result.text);
+
+        if let Ok(result) = serde_json::from_str::<PromptResponse>(&result.text) {
+            response = result;
+            break;
         }
-    };
 
-    let response = serde_json::from_str::<PromptResponse>(&response.text).unwrap();
-
-    tracing::info!("Existing conversation: {:#?}", conversation);
+        prompt = recover_conversation();
+    }
 
     messages_cache
         .insert(session_id.clone(), conversation)

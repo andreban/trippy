@@ -15,6 +15,17 @@ pub struct PromptResponse {
     pub next_prompt: Option<String>,
 }
 
+pub fn recover_conversation() -> String {
+    format!(
+        "You returned invalid data in the previous message. Remember \
+        your goals from the first message and the data collected so far.\
+        The user has never seen the previous message, so do not apologize. \
+        Continue collecting the required information from the user. Here's a \
+        reminder of the first message: \n\n {}",
+        create_initial_prompt()
+    )
+}
+
 pub fn create_initial_prompt() -> String {
     let current_date = OffsetDateTime::now_utc();
     format!(
