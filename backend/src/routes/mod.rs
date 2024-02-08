@@ -2,24 +2,17 @@ mod prompt;
 
 use std::sync::OnceLock;
 
-use crate::AppState;
+use crate::{routes::prompt::PromptResponse, AppState};
 use axum::{
     extract::{Query, State},
     response::IntoResponse,
     routing::any,
     Router,
 };
+use gemini_rs::prelude::Dialogue;
 use moka::future::Cache;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::json;
-
-use self::prompt::prompt_conversation;
-
-#[derive(Clone, Default, Debug, Deserialize, Serialize)]
-struct Message {
-    role: String,
-    text: String,
-}
 
 pub fn routes() -> Router<AppState> {
     Router::new().route("/prompt", any(prompt))
@@ -31,8 +24,8 @@ pub struct PromptParams {
     prompt: Option<String>,
 }
 
-fn get_messages_cache() -> Cache<String, Vec<Message>> {
-    static MESSAGES_CACHE: OnceLock<Cache<String, Vec<Message>>> = OnceLock::new();
+fn get_messages_cache() -> Cache<String, Dialogue> {
+    static MESSAGES_CACHE: OnceLock<Cache<String, Dialogue>> = OnceLock::new();
     MESSAGES_CACHE.get_or_init(|| Cache::new(100)).clone()
 }
 
@@ -49,51 +42,28 @@ pub async fn prompt(
 
     let mut conversation = messages_cache.get(&session_id).await.unwrap_or_else(|| {
         tracing::info!("creating new conversation for session_id: {}", session_id);
-        vec![Message {
-            role: "user".to_string(),
-            text: prompt::create_initial_prompt(),
-        }]
+        Dialogue::new()
     });
 
-    tracing::info!("Existing conversation: {:#?}", conversation);
-    // Append the user's prompt to the conversation.
-    if let Some(prompt) = &params.prompt {
-        conversation.push(Message {
-            role: "user".to_string(),
-            text: prompt.clone(),
-        });
-    }
+    let prompt = params
+        .prompt
+        .clone()
+        .unwrap_or_else(prompt::create_initial_prompt);
 
-    // Convert the conversation to the format expected by the model.
-    let model_conversation = conversation
-        .iter()
-        .map(|message| (message.role.as_str(), message.text.as_str()))
-        .collect::<Vec<(&str, &str)>>();
-
-    // Get the response from the model.
-    let response = match prompt_conversation(&appstate.vertex_client, &model_conversation).await {
+    let response = match conversation.do_turn(&appstate.vertex_client, &prompt).await {
         Ok(response) => response,
-        Err(e) => {
-            let message = match e {
-                prompt::PromptError::VertexError(e) => {
-                    format!("Error getting response from prompt: {}", e)
-                }
-                prompt::PromptError::SerdeError(e) => {
-                    format!("Error deserializing response from prompt: {}", e)
-                }
-            };
-            return (axum::http::StatusCode::INTERNAL_SERVER_ERROR, message);
+        Err(_) => {
+            return (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                "API Error".to_string(),
+            );
         }
     };
 
-    // Append the model's response to the conversation.
-    conversation.push(Message {
-        role: "model".to_string(),
-        text: serde_json::to_string(&response).unwrap(),
-    });
+    let response = serde_json::from_str::<PromptResponse>(&response.text).unwrap();
 
-    tracing::info!("conversation: {:#?}", conversation);
-    // Save the updated conversation to the session.
+    tracing::info!("Existing conversation: {:#?}", conversation);
+
     messages_cache
         .insert(session_id.clone(), conversation)
         .await;
@@ -103,8 +73,8 @@ pub async fn prompt(
         "sessionId": session_id,
         "response": response,
     });
-    (
-        axum::http::StatusCode::OK,
-        serde_json::to_string(&json).unwrap(),
-    )
+
+    let json = json.to_string();
+
+    (axum::http::StatusCode::OK, json)
 }

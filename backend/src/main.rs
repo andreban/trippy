@@ -1,20 +1,19 @@
 mod routes;
-mod vertexai;
 
 use std::env;
 use std::sync::Arc;
 
 use axum::{http::Method, Router};
 use gcp_auth::AuthenticationManager;
+use gemini_rs::prelude::GeminiClient;
 use tower_http::{
     cors::{Any, CorsLayer},
     services::ServeDir,
 };
-use vertexai::VertexClient;
 
 #[derive(Clone)]
 struct AppState {
-    pub vertex_client: VertexClient<Arc<AuthenticationManager>>,
+    pub vertex_client: GeminiClient<Arc<AuthenticationManager>>,
 }
 
 #[tokio::main]
@@ -26,7 +25,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let authentication_manager = AuthenticationManager::new().await?;
     tracing::info!("GCP AuthenticationManager initialized.");
 
-    let vertex_client = VertexClient::from_env(Arc::new(authentication_manager))?;
+    let api_endpoint = std::env::var("API_ENDPOINT")?;
+    let project_id = std::env::var("PROJECT_ID")?;
+    let location_id = std::env::var("LOCATION_ID")?;
+    let vertex_client = GeminiClient::new(
+        Arc::new(authentication_manager),
+        api_endpoint,
+        project_id,
+        location_id,
+    );
+
     tracing::info!("Created Vertex API Client.");
 
     let app_state = AppState { vertex_client };
