@@ -2,7 +2,7 @@ import { Card, Typography } from "@mui/material";
 import { Message } from "../lib/Message";
 import Markdown from "react-markdown";
 
-export default function ConversationCard({message} : {message: Message}) {
+export default function MessageCard({message} : {message: Message}) {
     const alignment = message.sender == 'user' ? 'end' : 'start';
     const senderName = message.sender == 'user' ? 'You' : '✨Trippy';
     const backgroundColor = message.sender == 'user' ? 'PowderBlue' : 'LightCyan';
