@@ -7,14 +7,14 @@ edition = "2021"
 
 [dependencies]
 axum = "0.7.3"
-gemini-rs = { git = "https://github.com/andreban/gemini-rs.git", rev = "b8f2b7e" }
-gcp_auth = "0.10.0"
+gemini-rs = { git = "https://github.com/andreban/gemini-rs.git", rev = "3d298fa" }
+gcp_auth = "0.11.1"
 moka = { version = "0.12.5", features = ["future"] }
-reqwest = { version = "0.11.9", features = ["json", "gzip"] }
+reqwest = { version = "^0.11.9", features = ["json", "gzip"] }
 serde = { version = "*", features = ["derive"] }
 serde_json = { version = "*"}
 time = { version = "*", features = ["serde", "parsing", "formatting"]}
-tokio = { version = "1.35.1", features = ["full"] }
+tokio = { version = "1.37.0", features = ["full"] }
 tower-http = {version = "0.5.0", features = ["fs", "cors"] }
 # tower-sessions = "0.10.1"
 tracing = { version = "*"}

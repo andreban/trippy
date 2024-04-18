@@ -45,7 +45,7 @@ pub async fn prompt(
 
     let mut conversation = messages_cache.get(&session_id).await.unwrap_or_else(|| {
         tracing::info!("creating new conversation for session_id: {}", session_id);
-        Dialogue::new()
+        Dialogue::new("gemini-1.0-pro-001")
     });
 
     let mut prompt = params.prompt.clone().unwrap_or_else(create_initial_prompt);
