@@ -4,7 +4,6 @@ use std::env;
 use std::sync::Arc;
 
 use axum::{http::Method, Router};
-use gcp_auth::AuthenticationManager;
 use gemini_rs::prelude::GeminiClient;
 use tower_http::{
     cors::{Any, CorsLayer},
@@ -13,7 +12,7 @@ use tower_http::{
 
 #[derive(Clone)]
 struct AppState {
-    pub vertex_client: GeminiClient<Arc<AuthenticationManager>>,
+    pub vertex_client: GeminiClient<Arc<dyn gcp_auth::TokenProvider>>,
 }
 
 #[tokio::main]
@@ -22,14 +21,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let bind_address = env::var("BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1:8080".to_string());
 
-    let authentication_manager = AuthenticationManager::new().await?;
+    let authentication_manager = gcp_auth::provider().await?;
     tracing::info!("GCP AuthenticationManager initialized.");
 
     let api_endpoint = std::env::var("API_ENDPOINT")?;
     let project_id = std::env::var("PROJECT_ID")?;
     let location_id = std::env::var("LOCATION_ID")?;
     let vertex_client = GeminiClient::new(
-        Arc::new(authentication_manager),
+        authentication_manager,
         api_endpoint,
         project_id,
         location_id,

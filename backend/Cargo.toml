@@ -7,10 +7,10 @@ edition = "2021"
 
 [dependencies]
 axum = "0.7.5"
-gemini-rs = { git = "https://github.com/andreban/gemini-rs.git", rev = "3d298fa" }
-gcp_auth = "0.11.1"
+gemini-rs = { git = "https://github.com/andreban/gemini-rs", rev = "8e2c7dc"}
+gcp_auth = "0.12.2"
 moka = { version = "0.12.7", features = ["future"] }
-reqwest = { version = "^0.11.9", features = ["json", "gzip"] }
+reqwest = { version = "^0.12.2", features = ["json", "gzip"] }
 serde = { version = "*", features = ["derive"] }
 serde_json = { version = "*"}
 time = { version = "*", features = ["serde", "parsing", "formatting"]}
